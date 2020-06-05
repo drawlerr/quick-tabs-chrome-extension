@@ -211,6 +211,15 @@ function setShowDevTools(val) {
   localStorage["include_dev_tools"] = val;
 }
 
+function showExtensions() {
+  var s = localStorage["include_extensions"];
+  return s ? s === 'true' : false;
+}
+
+function setShowExtensions(val) {
+  localStorage["include_extensions"] = val;
+}
+
 function autoSearchBookmarks() {
   var s = localStorage["auto_search_bookmarks"];
   return s ? s === 'true' : true;
@@ -407,7 +416,9 @@ function validTab(tab) {
 }
 
 function includeTab(tab) {
-  return !(!showDevTools() && /chrome-devtools:\/\//.exec(tab.url)) && !(!showPinnedTabs() && tab.pinned);
+  return !(!showDevTools() && /chrome-devtools:\/\//.exec(tab.url)) &&
+      !(!showExtensions() && /chrome-extension:\/\//.exec(tab.url)) &&
+      !(!showPinnedTabs() && tab.pinned);
 }
 
 function getKeyCombo(savedAs, def) {
