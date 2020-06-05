@@ -494,7 +494,9 @@ function renderTabs(params, delay, currentTab) {
     if (currentTab && obj.id === currentTab.id) {
       log(obj.id, currentTab.id, obj.id !== currentTab.id, obj, currentTab);
     }
-    if (bg.includeTab(obj) && (!currentTab || obj.id !== currentTab.id) && (!currentTab || currentTab.incognito==obj.incognito)) {
+    if (bg.includeTab(obj) &&
+        (!currentTab || obj.id !== currentTab.id) &&
+        (!currentTab || currentTab.incognito===obj.incognito)) {
       obj.templateTabImage = tabImage(obj);
       obj.templateTitle = encodeHTMLSource(obj.title);
       obj.templateTooltip = stripTitle(obj.title);
@@ -756,6 +758,9 @@ AbstractSearch.prototype.shouldSearch = function(query) {
   return newQuery;
 };
 
+
+
+
 /**
  * Retrieve the search string from the search box and search the different tab groups following these rules:
  *
@@ -777,13 +782,27 @@ AbstractSearch.prototype.executeSearch = function(query, searchBookmark, searchH
   var filteredTabs = [];
   var filteredClosed = [];
   var filteredBookmarks = [];
+  var tabs = bg.tabs;
+  var closedTabs = bg.closedTabs;
+  var currentTab = tabs[0]
+  if (currentTab) {
+    bg.console.log("currentTab: " + currentTab);
+  }
+
+  // Start off filtering for incognito
+  if (currentTab && currentTab.incognito) {
+    filteredTabs = tabs.filter(filterIncog);
+    filteredClosed = closedTabs.filter(filterIncog);
+  } else {
+    filteredTabs = tabs.filter(t => !filterIncog(t));
+    filteredClosed = closedTabs.filter(t => !filterIncog(t));
+  }
 
   if (query.trim().length === 0) {
     // no need to search if the string is empty
-    filteredTabs = bg.tabs.filter(bg.validTab);
-    filteredClosed = bg.closedTabs;
+    filteredTabs = filteredTabs.filter(bg.validTab);
   } else if (query === audibleQuery) {
-    filteredTabs = bg.tabs.filter(tab => bg.validTab(tab) && filterAudible(tab))
+    filteredTabs = filteredTabs.filter(tab => bg.validTab(tab) && filterAudible(tab))
   } else if (searchHistory || startsOrEndsWith(query, searchHistoryStr)) {
     // i hate to break out of a function part way though but...
     this.searchHistory(query, 0);
@@ -791,8 +810,8 @@ AbstractSearch.prototype.executeSearch = function(query, searchBookmark, searchH
   } else if (searchBookmark || startsOrEndsWith(query, searchBookmarkStr)) {
     filteredBookmarks = this.searchTabArray(query, bg.bookmarks);
   } else {
-    filteredTabs = this.searchTabArray(query, bg.tabs.filter(bg.validTab));
-    filteredClosed = this.searchTabArray(query, bg.closedTabs);
+    filteredTabs = this.searchTabArray(query, filteredTabs);
+    filteredClosed = this.searchTabArray(query, filteredClosed);
     var resultCount = filteredTabs.length + filteredClosed.length;
     if (startsOrEndsWith(query, searchTabsBookmarksStr) || resultCount < MIN_TAB_ONLY_RESULTS) {
       filteredBookmarks = this.searchTabArray(query, bg.bookmarks);
@@ -811,6 +830,10 @@ AbstractSearch.prototype.executeSearch = function(query, searchBookmark, searchH
 
 function filterAudible(t) {
   return t.audible
+}
+
+function filterIncog(t) {
+  return t.incognito
 }
 
 /**
