@@ -507,12 +507,14 @@ function renderTabs(params, delay, currentTab) {
   }, []);
 
   var closedTabs = (params.closedTabs || []).map(function(obj) {
-    obj.templateTabImage = tabImage(obj);
-    obj.templateTitle = encodeHTMLSource(obj.title);
-    obj.templateTooltip = stripTitle(obj.title);
-    obj.templateUrl = encodeHTMLSource(obj.displayUrl || obj.url);
-    obj.templateUrlPath = encodeHTMLSource(obj.url);
-    return obj;
+    if (!currentTab || currentTab.incognito === obj.incognito) {
+      obj.templateTabImage = tabImage(obj);
+      obj.templateTitle = encodeHTMLSource(obj.title);
+      obj.templateTooltip = stripTitle(obj.title);
+      obj.templateUrl = encodeHTMLSource(obj.displayUrl || obj.url);
+      obj.templateUrlPath = encodeHTMLSource(obj.url);
+      return obj;
+    }
   });
 
   let toSearchableObj = function(obj) {
